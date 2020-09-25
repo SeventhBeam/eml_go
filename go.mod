@@ -1,4 +1,4 @@
-module gitlab.com/seventhbeam/eml/integration/eml-go
+module gitlab.com/seventhbeam/eml-go
 
 go 1.14
 
