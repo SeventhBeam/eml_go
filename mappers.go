@@ -1,6 +1,7 @@
 package eml
 
 import (
+	"log"
 	"sort"
 	"strconv"
 	"time"
@@ -36,7 +37,7 @@ func mapHookRequest(s *Settings, emlConfig *Config, key *Key) (*HookRequest, err
 	}
 	enabled := true
 	return &HookRequest{
-		Uri:             s.hookUri(),
+		Uri:             s.HookUri,
 		Scope:           scope,
 		FilterSpec:      FilterSpecAll,
 		Enabled:         &enabled,
@@ -48,7 +49,7 @@ func mapHookRequest(s *Settings, emlConfig *Config, key *Key) (*HookRequest, err
 
 func mapScope(emlConfig *Config) ([]int, error) {
 	numProductCompanies := len(emlConfig.ProductCompanies)
-	scope := make([]int, numProductCompanies+1)
+	scope := make([]int, numProductCompanies)
 	for i, company := range emlConfig.ProductCompanies {
 		num, err := strconv.Atoi(company.CompanyId)
 		if err != nil {
@@ -57,10 +58,10 @@ func mapScope(emlConfig *Config) ([]int, error) {
 		scope[i] = num
 	}
 	num, err := strconv.Atoi(emlConfig.DisbursementCompanyId)
-	if err != nil {
-		return nil, ContextualError(err, "error converting disbursement company ID to int: %s", emlConfig.DisbursementCompanyId)
+	if err == nil {
+		scope = append(scope, num)
+		log.Printf("error converting disbursement company ID to int: %s", emlConfig.DisbursementCompanyId)
 	}
-	scope[numProductCompanies] = num
 	sort.Ints(scope)
 	return scope, nil
 }

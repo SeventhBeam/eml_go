@@ -19,16 +19,18 @@ func SetupHook(ctx context.Context, emlConfig *Config, emlStore Store, s *Settin
 
 	myHooks := make([]Hook, 0)
 	for _, v := range hooks.Items {
-		if v.HmacKeyId == emlConfig.NotificationHookId && v.Uri == s.hookUri() {
+		//if v.HmacKeyId == emlConfig.NotificationHookId && v.Uri == s.HookUri {
+		if v.Uri == s.HookUri {
 			myHooks = append(myHooks, v)
 		}
 	}
 
 	if len(myHooks) == 0 {
-		return registerNewHook(ctx, emlConfig, emlStore, s)
+		_, _, err := registerNewHook(ctx, emlConfig, emlStore, s, emlConfig.HmacKey)
+		return err
 	}
 
-	err = checkHookStatus(ctx, emlConfig, emlStore, h)
+	err = checkHookStatus(ctx, emlConfig, emlStore, myHooks[0].Id, h)
 	if err != nil {
 		return err
 	}
@@ -46,29 +48,29 @@ func SetupHook(ctx context.Context, emlConfig *Config, emlStore Store, s *Settin
 	return nil
 }
 
-func registerNewHook(ctx context.Context, emlConfig *Config, emlStore Store, s *Settings) error {
+func registerNewHook(ctx context.Context, emlConfig *Config, emlStore Store, s *Settings, key *Key) (*Key, *string, error) {
 	log.Println("Registering new EML webhook")
-	key, err := GenerateSecureKey(32)
-	if err != nil {
-		return ContextualError(err, "utils.GenerateSecureKey")
+	var err error
+	if key == nil {
+		key, err = GenerateSecureKey(32)
+		if err != nil {
+			return nil, nil, ContextualError(err, "utils.GenerateSecureKey")
+		}
 	}
 	newHookRequest, err := mapHookRequest(s, emlConfig, key)
 	if err != nil {
-		return ContextualError(err, "mapHookRequest")
+		return nil, nil, ContextualError(err, "mapHookRequest")
 	}
-	_, err = emlStore.AddHook(ctx, newHookRequest)
+	id, err := emlStore.AddHook(ctx, newHookRequest)
 	if err != nil {
-		return ContextualError(err, "emlStore.AddHook")
+		return nil, nil, ContextualError(err, "emlStore.AddHook")
 	}
-	//if err := emlStore.UpdateEmlConfigWebhook(ctx, hookId, key); err != nil {
-	//	return ContextualError(err, "dataStore.UpdateEmlConfigWebhook")
-	//}
-	return nil
+	return key, &id, nil
 }
 
-func checkHookStatus(ctx context.Context, emlConfig *Config, emlStore Store, h TransactionHandler) error {
-	log.Println("Checking status of existing EML webhook", emlConfig.NotificationHookId)
-	hook, err := emlStore.GetHook(ctx, emlConfig.NotificationHookId)
+func checkHookStatus(ctx context.Context, emlConfig *Config, emlStore Store, hookId string, h TransactionHandler) error {
+	log.Println("Checking status of existing EML webhook", hookId)
+	hook, err := emlStore.GetHook(ctx, hookId)
 	if err != nil {
 		return ContextualError(err, "emlStore.GetHook")
 	}

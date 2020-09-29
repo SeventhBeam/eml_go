@@ -2,7 +2,6 @@ package eml
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-resty/resty/v2"
 	"log"
 	"net/http"
@@ -34,12 +33,9 @@ type Store interface {
 
 type Settings struct {
 	FunctionHost string
+	HookUri      string
 	EmlRestId    string
 	EmlHostUrl   string
-}
-
-func (s Settings) hookUri() string {
-	return fmt.Sprintf("%sWebhook/v1/eml/notification", s.FunctionHost)
 }
 
 type emlStore struct {
@@ -242,14 +238,23 @@ func (e *emlStore) AddHook(ctx context.Context, request *HookRequest) (string, e
 
 func (e *emlStore) GetHooks(ctx context.Context) (*HookPage, error) {
 	log.Println("Getting notification webhooks")
+	hooks := &[]Hook{}
 	resp, err := e.request(ctx).
-		SetResult(&HookPage{}).
+		SetResult(hooks).
 		SetHeader(headerAccept, contentTypeJson).
 		Get("/3.0/hooks")
 	if err := checkError(resp, err); err != nil {
 		return nil, err
 	}
-	return resp.Result().(*HookPage), nil
+	actualPageSize, _ := strconv.Atoi(resp.Header().Get(headerPageSize))
+	totalItems, _ := strconv.Atoi(resp.Header().Get(headerTotalItems))
+
+	return &HookPage{
+		NextCursor: "",
+		PageSize:   actualPageSize,
+		Count:      totalItems,
+		Items:      *hooks,
+	}, nil
 }
 
 func (e *emlStore) GetHook(ctx context.Context, hookId string) (*Hook, error) {
@@ -266,7 +271,7 @@ func (e *emlStore) GetHook(ctx context.Context, hookId string) (*Hook, error) {
 }
 
 func (e *emlStore) DeleteHook(ctx context.Context, hookId string) error {
-	log.Println("Getting notification webhook", hookId)
+	log.Println("Deleting notification webhook", hookId)
 	resp, err := e.request(ctx).
 		SetPathParams(map[string]string{"id": hookId}).
 		SetHeader(headerAccept, contentTypeJson).

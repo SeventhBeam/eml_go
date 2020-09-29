@@ -60,10 +60,7 @@ func (r *Request) GetEmlMessageSpec() (messageType, version string, err error) {
 }
 
 // Read from the passed reader, returning another reader to re-read the body
-func (r *Request) CheckHmacSignature(keys []Key, body io.Reader) (io.Reader, error) {
-	if len(keys) == 0 {
-		return body, fmt.Errorf("no keys provided")
-	}
+func (r *Request) CheckHmacSignature(key *Key, body io.Reader) (io.Reader, error) {
 	header := r.Header.Get(headerActualAuth)
 	if header == "" {
 		return body, fmt.Errorf("no Authorization header")
@@ -77,13 +74,6 @@ func (r *Request) CheckHmacSignature(keys []Key, body io.Reader) (io.Reader, err
 	}
 	values := strings.Split(parts[1], ";")
 	keyId, messageHex := values[0], values[1]
-	var key *Key
-	for _, k := range keys {
-		if k.Id == keyId {
-			key = &k
-			break
-		}
-	}
 	if key == nil {
 		return body, fmt.Errorf("unknown key ID %s", keyId)
 	}

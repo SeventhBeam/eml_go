@@ -27,6 +27,7 @@ const (
 const (
 	headerPageSize   = "X-PageSize"
 	headerTotalPages = "X-TotalPages"
+	headerTotalItems = "X-Totalitems"
 )
 const (
 	queryPageSize       = "page_size"

@@ -24,7 +24,8 @@ func HandleNotification(ctx context.Context, req *Request, res Response, deps De
 	if messageType != TxnTypeTransaction && messageType != TxnTypeUndeliverableAlert {
 		log.Println("Acknowledging ", messageType, " we don't care about")
 		var message IdModel
-		if err := json.NewDecoder(req.Body).Decode(message); err != nil {
+
+		if err := json.NewDecoder(req.Body).Decode(&message); err != nil {
 			return BadError(ErrorParsingBody, ContextualError(err, "json.Decode"))
 		}
 
@@ -40,9 +41,6 @@ func HandleNotification(ctx context.Context, req *Request, res Response, deps De
 	//		return ContextualError(err, "deps.Data.GetEmlConfig")
 	//	}
 	//}
-	if len(deps.Config.HmacKeys) == 0 {
-		return fmt.Errorf("no HMAC keys configured")
-	}
 	var message Message
 	var buf bytes.Buffer
 	if err := req.UnmarshalJsonAndCopy(&message, &buf); err != nil {
@@ -63,7 +61,7 @@ func HandleNotification(ctx context.Context, req *Request, res Response, deps De
 	buf = buf2
 	// end temporary logging
 
-	if body, err := req.CheckHmacSignature(deps.Config.HmacKeys, &buf); err != nil {
+	if body, err := req.CheckHmacSignature(deps.Config.HmacKey, &buf); err != nil {
 		log.Println(body.(*bytes.Buffer).String())
 		return UnauthorizedError(ContextualError(err, "req.CheckHmacSignature"))
 	}
@@ -94,7 +92,7 @@ type Config struct {
 	ProductCompanies      []ProductCompany
 	DisbursementCompanyId string
 	NotificationHookId    string
-	HmacKeys              []Key
+	HmacKey               *Key
 }
 
 type ProductCompany struct {
