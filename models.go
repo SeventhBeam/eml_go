@@ -156,6 +156,13 @@ type freeFieldsRequest struct {
 	Dec2  float64 `json:"free_dec2"`
 }
 
+type HookPage struct {
+	NextCursor string
+	PageSize   int
+	Count      int
+	Items      []Hook
+}
+
 type Hook struct {
 	Id                         string `json:"id"`
 	Uri                        string `json:"uri"`

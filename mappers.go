@@ -1,7 +1,6 @@
 package eml
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"time"
@@ -37,7 +36,7 @@ func mapHookRequest(s *Settings, emlConfig *Config, key *Key) (*HookRequest, err
 	}
 	enabled := true
 	return &HookRequest{
-		Uri:             fmt.Sprintf("%sWebhook/v1/eml/notification", s.FunctionHost),
+		Uri:             s.hookUri(),
 		Scope:           scope,
 		FilterSpec:      FilterSpecAll,
 		Enabled:         &enabled,

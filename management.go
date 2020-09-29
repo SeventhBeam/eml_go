@@ -10,20 +10,49 @@ import (
 	"sort"
 )
 
-func SetupHook(ctx context.Context, emlConfig *Config, emlStore Store, e *Settings, h TransactionHandler) error {
-	if emlConfig.NotificationHookId == "" {
-		return registerNewHook(ctx, emlConfig, emlStore, e)
+func SetupHook(ctx context.Context, emlConfig *Config, emlStore Store, s *Settings, h TransactionHandler) error {
+	hooks, err := emlStore.GetHooks(ctx)
+	//Get more hooks if there is a page cursor
+	if err != nil {
+		return ContextualError(err, "emlStore.GetHooks")
 	}
-	return checkHookStatus(ctx, emlConfig, emlStore, h)
+
+	myHooks := make([]Hook, 0)
+	for _, v := range hooks.Items {
+		if v.HmacKeyId == emlConfig.NotificationHookId && v.Uri == s.hookUri() {
+			myHooks = append(myHooks, v)
+		}
+	}
+
+	if len(myHooks) == 0 {
+		return registerNewHook(ctx, emlConfig, emlStore, s)
+	}
+
+	err = checkHookStatus(ctx, emlConfig, emlStore, h)
+	if err != nil {
+		return err
+	}
+
+	scope := myHooks[0].Scope
+	for _, hook := range myHooks[1:] {
+		scope = append(scope, hook.Scope...)
+		//Remove the extra hooks, they will be covered by the updated scope
+		err = emlStore.DeleteHook(ctx, hook.Id)
+		if err != nil {
+			log.Printf("Unable to delete hook: %v, due to %v", hook.Id, err)
+		}
+	}
+
+	return nil
 }
 
-func registerNewHook(ctx context.Context, emlConfig *Config, emlStore Store, e *Settings) error {
+func registerNewHook(ctx context.Context, emlConfig *Config, emlStore Store, s *Settings) error {
 	log.Println("Registering new EML webhook")
 	key, err := GenerateSecureKey(32)
 	if err != nil {
 		return ContextualError(err, "utils.GenerateSecureKey")
 	}
-	newHookRequest, err := mapHookRequest(e, emlConfig, key)
+	newHookRequest, err := mapHookRequest(s, emlConfig, key)
 	if err != nil {
 		return ContextualError(err, "mapHookRequest")
 	}

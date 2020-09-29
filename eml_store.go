@@ -2,6 +2,7 @@ package eml
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-resty/resty/v2"
 	"log"
 	"net/http"
@@ -23,16 +24,22 @@ type Store interface {
 
 	// Notifications
 	AddHook(ctx context.Context, model *HookRequest) (string, error)
+	GetHooks(ctx context.Context) (*HookPage, error)
 	GetHook(ctx context.Context, hookId string) (*Hook, error)
+	DeleteHook(ctx context.Context, hookId string) error
 	UpdateHookScope(ctx context.Context, hookId string, scope []int) error
 	GetUndeliverable(ctx context.Context, hookId string, pageSize int, pageNumber int) (*MessagePage, error)
 	DismissUndeliverable(ctx context.Context, hookId string, messageIds []string) error
 }
 
 type Settings struct {
-	FunctionHost     string
-	EmlRestId        string
-	EmlHostUrl       string
+	FunctionHost string
+	EmlRestId    string
+	EmlHostUrl   string
+}
+
+func (s Settings) hookUri() string {
+	return fmt.Sprintf("%sWebhook/v1/eml/notification", s.FunctionHost)
 }
 
 type emlStore struct {
@@ -233,6 +240,18 @@ func (e *emlStore) AddHook(ctx context.Context, request *HookRequest) (string, e
 	return resp.Result().(*IdModel).Id, nil
 }
 
+func (e *emlStore) GetHooks(ctx context.Context) (*HookPage, error) {
+	log.Println("Getting notification webhooks")
+	resp, err := e.request(ctx).
+		SetResult(&HookPage{}).
+		SetHeader(headerAccept, contentTypeJson).
+		Get("/3.0/hooks")
+	if err := checkError(resp, err); err != nil {
+		return nil, err
+	}
+	return resp.Result().(*HookPage), nil
+}
+
 func (e *emlStore) GetHook(ctx context.Context, hookId string) (*Hook, error) {
 	log.Println("Getting notification webhook", hookId)
 	resp, err := e.request(ctx).
@@ -244,6 +263,18 @@ func (e *emlStore) GetHook(ctx context.Context, hookId string) (*Hook, error) {
 		return nil, err
 	}
 	return resp.Result().(*Hook), nil
+}
+
+func (e *emlStore) DeleteHook(ctx context.Context, hookId string) error {
+	log.Println("Getting notification webhook", hookId)
+	resp, err := e.request(ctx).
+		SetPathParams(map[string]string{"id": hookId}).
+		SetHeader(headerAccept, contentTypeJson).
+		Delete("/3.0/hooks/{id}")
+	if err := checkError(resp, err); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (e *emlStore) UpdateHookScope(ctx context.Context, hookId string, scope []int) error {
