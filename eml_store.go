@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -36,6 +35,7 @@ type Settings struct {
 	HookUri      string
 	EmlRestId    string
 	EmlHostUrl   string
+	DebugRest    bool
 }
 
 type emlStore struct {
@@ -54,7 +54,7 @@ func (e *emlStore) lazyInit(ctx context.Context) {
 			SetBasicAuth(e._env.EmlRestId, e._restSecret).
 			SetHeader(headerAccept, contentTypeEmlJson).
 			SetError(&ErrorModel{}).
-			SetDebug(strings.Contains(e._env.EmlHostUrl, "beta")).
+			SetDebug(e._env.DebugRest).
 			OnBeforeRequest(e.onBeforeRequest).
 			OnBeforeRequest(logRequest).
 			OnAfterResponse(logResponse)

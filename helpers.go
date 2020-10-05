@@ -73,11 +73,14 @@ func (e *emlStore) refreshToken(ctx context.Context) error {
 		SetResult(&TokenResponse{}).
 		Post(pathToken)
 	if err != nil {
+		log.Printf("Error Refreshing EML access token : %v", err)
 		return err
 	}
 	if !resp.IsSuccess() {
+		log.Printf("Token Retrieval Unsuccessful : %v", resp.Error())
 		return resp.Error().(*ErrorModel)
 	}
+	log.Println("Token Updates")
 	e.token = mapBearerToken(resp.Result().(*TokenResponse))
 	return nil
 }
