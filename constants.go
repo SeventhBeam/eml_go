@@ -31,6 +31,8 @@ const (
 )
 const (
 	queryPageSize       = "page_size"
+	queryFromDate       = "start_date"
+	queryToDate         = "end_date"
 	queryPageNumber     = "page_number"
 	transactionViewType = "view_type"
 )

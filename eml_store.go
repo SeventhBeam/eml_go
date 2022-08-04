@@ -123,6 +123,8 @@ func (e *emlStore) GetTransactions(ctx context.Context, eaid string, pageSize in
 		SetQueryParams(map[string]string{
 			queryPageNumber:     pageNumber,
 			queryPageSize:       strconv.Itoa(pageSize),
+			queryFromDate:       "",
+			queryToDate:         "",
 			transactionViewType: string(view),
 		}).
 		SetResult([]Transaction{}).
