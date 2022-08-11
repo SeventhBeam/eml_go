@@ -121,11 +121,11 @@ func (e *emlStore) GetTransactions(ctx context.Context, eaid string, pageSize in
 	resp, err := e.request(ctx).
 		SetPathParams(map[string]string{"id": eaid}).
 		SetQueryParams(map[string]string{
-			queryPageNumber:     pageNumber,
-			queryPageSize:       strconv.Itoa(pageSize),
-			queryFromDate:       "",
-			queryToDate:         "",
-			transactionViewType: string(view),
+			queryPageNumber: pageNumber,
+			queryPageSize:   strconv.Itoa(pageSize),
+			queryFromDate:   "",
+			queryToDate:     "",
+			//transactionViewType: string(view),
 		}).
 		SetResult([]Transaction{}).
 		Get("/3.0/accounts/{id}/transactions")
