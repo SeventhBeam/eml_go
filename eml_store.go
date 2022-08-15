@@ -7,13 +7,14 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type Store interface {
 	CreateAccount(ctx context.Context, request *CreateAccountRequest) (*AccountSummary, error)
 	GetAccount(ctx context.Context, eaid string, flags ...GetAccountFlag) (*AccountInfo, error)
 	GetSummary(ctx context.Context, eaid string) (*AccountSummary, error)
-	GetTransactions(ctx context.Context, eaid string, pageSize int, cursor string, view TransactionViewType) (*TransactionsPage, error)
+	GetTransactions(ctx context.Context, eaid string, pageSize int, cursor string, startDate *time.Time, endDate *time.Time) (*TransactionsPage, error)
 	UpdateStatus(ctx context.Context, eaid string, status CardStatus) error
 	UpdatePlasticEnabled(ctx context.Context, eaid string, enabled bool) error
 	UpdateRegistration(ctx context.Context, eaid string, info RegistrationInfo) error
@@ -108,24 +109,30 @@ func (e *emlStore) GetSummary(ctx context.Context, eaid string) (*AccountSummary
 	return resp.Result().(*AccountSummary), nil
 }
 
-func (e *emlStore) GetTransactions(ctx context.Context, eaid string, pageSize int, cursor string, view TransactionViewType) (*TransactionsPage, error) {
+func (e *emlStore) GetTransactions(ctx context.Context, eaid string, pageSize int, cursor string, startDate *time.Time, endDate *time.Time) (*TransactionsPage, error) {
 	log.Printf("Getting account %s transactions (%d, %s)", eaid, pageSize, cursor)
 	pageNumber := cursor
 	if pageNumber == "" {
 		pageNumber = "1"
 	}
-	dv := SimplifiedView
-	if view == "" {
-		view = dv
+	//2018-02-24T09:02:10Z
+	df := "2006-01-02T03:04:05Z"
+	startDateStr := ""
+	if startDate != nil {
+		startDateStr = startDate.Format(df)
 	}
+	endDateStr := ""
+	if endDate != nil {
+		endDateStr = endDate.Format(df)
+	}
+
 	resp, err := e.request(ctx).
 		SetPathParams(map[string]string{"id": eaid}).
 		SetQueryParams(map[string]string{
 			queryPageNumber: pageNumber,
 			queryPageSize:   strconv.Itoa(pageSize),
-			queryFromDate:   "",
-			queryToDate:     "",
-			//transactionViewType: string(view),
+			queryFromDate:   startDateStr,
+			queryToDate:     endDateStr,
 		}).
 		SetResult([]Transaction{}).
 		Get("/3.0/accounts/{id}/transactions")
@@ -134,6 +141,7 @@ func (e *emlStore) GetTransactions(ctx context.Context, eaid string, pageSize in
 	}
 	actualPageSize, _ := strconv.Atoi(resp.Header().Get(headerPageSize))
 	totalPages, _ := strconv.Atoi(resp.Header().Get(headerTotalPages))
+	totalItems, _ := strconv.Atoi(resp.Header().Get(headerTotalItems))
 	nextPageNumber, _ := strconv.Atoi(pageNumber)
 	nextPageNumber++
 	nextCursor := ""
@@ -147,6 +155,8 @@ func (e *emlStore) GetTransactions(ctx context.Context, eaid string, pageSize in
 		txns = *resp.Result().(*[]Transaction)
 	}
 	page := &TransactionsPage{
+		//TotalPages: totalPages,
+		TotalItems: totalItems,
 		PageSize:   actualPageSize,
 		NextCursor: nextCursor,
 		Count:      len(txns),

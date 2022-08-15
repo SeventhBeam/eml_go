@@ -101,6 +101,8 @@ type AccountInfo struct {
 }
 
 type TransactionsPage struct {
+	TotalPages int
+	TotalItems int
 	NextCursor string
 	PageSize   int
 	Count      int
