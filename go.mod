@@ -1,4 +1,4 @@
-module github.com/SeventhBeam/eml_go
+module github.com/seventhbeam/eml_go
 
 go 1.14
 
