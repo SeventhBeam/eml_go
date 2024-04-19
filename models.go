@@ -114,6 +114,7 @@ type Transaction struct {
 	ParentId   string      `json:"parent_id"`
 	OccurredAt string      `json:"occurred_at"`
 	Amount     json.Number `json:"amount"`
+	FeeAmount  json.Number `json:"fee_amount"`
 	Balance    json.Number `json:"running_balance_amount"`
 	Reference  string      `json:"reference"`
 }
