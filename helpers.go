@@ -84,3 +84,14 @@ func (e *emlStore) refreshToken(ctx context.Context) error {
 	e.token = mapBearerToken(resp.Result().(*TokenResponse))
 	return nil
 }
+
+func StringPtr(s string) *string {
+	return &s
+}
+
+func BoolToStringPtr(b bool) *string {
+	if b {
+		return StringPtr("true")
+	}
+	return StringPtr("false")
+}

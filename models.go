@@ -395,3 +395,36 @@ type TxnEvent struct {
 	/* The balance on the account after the event. */
 	RunningBalance TxnCurrency `json:"running_balance"`
 }
+
+type AuthenticateRequest struct {
+	ApplicationID string `json:"application_id"`
+	IPAddress     string `json:"ip_address"`
+}
+
+type AuthenticateResponse struct {
+	TokenID      string `json:"token_id"`
+	EmailAddress string `json:"email_address"`
+	Mobile       string `json:"mobile"`
+}
+
+type InitiateRequest struct {
+	IPAddress         string            `json:"ip_address"`
+	TokenID           string            `json:"token_id"`
+	CommunicateMethod CommunicateMethod `json:"communicate_method"`
+	OperationType     string            `json:"operation_type"`
+}
+
+type InitiateResponse struct {
+	OperationID string `json:"operation_id"`
+}
+
+type ValidationData struct {
+	OperationID  string `json:"operation_id"`
+	SecurityCode string `json:"security_code"`
+	IPAddress    string `json:"ip_address"`
+}
+
+type ActivateRequest struct {
+	ValidationData ValidationData `json:"validation_data"`
+	EnablePlastic  *string        `json:"enable_plastic,omitempty"`
+}
