@@ -29,6 +29,11 @@ type Store interface {
 	UpdateHookScope(ctx context.Context, hookId string, scope []int) error
 	GetUndeliverable(ctx context.Context, hookId string, pageSize int, pageNumber int) (*MessagePage, error)
 	DismissUndeliverable(ctx context.Context, hookId string, messageIds []string) error
+
+	// Renewals
+	Authenticate(ctx context.Context, eaid string, req AuthenticateRequest) (*AuthenticateResponse, error)
+	Initiate(ctx context.Context, eaid string, req InitiateRequest) (*InitiateResponse, error)
+	Activate(ctx context.Context, eaid string, req ActivateRequest) error
 }
 
 type Settings struct {
@@ -339,6 +344,47 @@ func (e *emlStore) DismissUndeliverable(ctx context.Context, hookId string, mess
 		SetHeader(headerContentType, contentTypeJson).
 		SetHeader(headerAccept, contentTypeJson).
 		Post("/3.0/hooks/{id}/undeliverable/dismiss")
+	if err := checkError(resp, err); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *emlStore) Authenticate(ctx context.Context, eaid string, req AuthenticateRequest) (*AuthenticateResponse, error) {
+	log.Printf("Authenticating account %s from IP %s", eaid, req.IPAddress)
+	resp, err := e.request(ctx).
+		SetPathParams(map[string]string{"id": eaid}).
+		SetBody(req).
+		SetResult(&AuthenticateResponse{}).
+		SetHeader(headerContentType, contentTypeEmlJson).
+		Post("/3.0/accounts/{id}/authenticate")
+	if err := checkError(resp, err); err != nil {
+		return nil, err
+	}
+	return resp.Result().(*AuthenticateResponse), nil
+}
+
+func (e *emlStore) Initiate(ctx context.Context, eaid string, req InitiateRequest) (*InitiateResponse, error) {
+	log.Printf("Initiating %s operation for account %s via %s", req.OperationType, eaid, req.CommunicateMethod)
+	resp, err := e.request(ctx).
+		SetPathParams(map[string]string{"id": eaid}).
+		SetBody(req).
+		SetResult(&InitiateResponse{}).
+		SetHeader(headerContentType, contentTypeEmlJson).
+		Post("/3.0/accounts/{id}/initiate")
+	if err := checkError(resp, err); err != nil {
+		return nil, err
+	}
+	return resp.Result().(*InitiateResponse), nil
+}
+
+func (e *emlStore) Activate(ctx context.Context, eaid string, req ActivateRequest) error {
+	log.Printf("Activating operation %s for account %s", req.ValidationData.OperationID, eaid)
+	resp, err := e.request(ctx).
+		SetPathParams(map[string]string{"id": eaid}).
+		SetBody(req).
+		SetHeader(headerContentType, contentTypeEmlJson).
+		Post("/3.0/accounts/{id}/activate")
 	if err := checkError(resp, err); err != nil {
 		return err
 	}

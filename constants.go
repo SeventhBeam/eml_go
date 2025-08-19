@@ -130,3 +130,10 @@ const (
 	StateCancelled  TxnState = "cancelled"
 	StateReversed   TxnState = "reversed"
 )
+
+type CommunicateMethod string
+
+const (
+	CommunicateMethodSMS   CommunicateMethod = "sms"
+	CommunicateMethodEmail CommunicateMethod = "email"
+)
