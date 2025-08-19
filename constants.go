@@ -137,3 +137,9 @@ const (
 	CommunicateMethodSMS   CommunicateMethod = "sms"
 	CommunicateMethodEmail CommunicateMethod = "email"
 )
+
+type OperationType string
+
+const (
+	OperationTypeOneTimePassCode OperationType = "one_time_pass_code"
+)
