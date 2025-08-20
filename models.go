@@ -411,7 +411,7 @@ type InitiateRequest struct {
 	IPAddress         string            `json:"ip_address"`
 	TokenID           string            `json:"token_id"`
 	CommunicateMethod CommunicateMethod `json:"communicate_method"`
-	OperationType     string            `json:"operation_type"`
+	OperationType     OperationType     `json:"operation_type"`
 }
 
 type InitiateResponse struct {

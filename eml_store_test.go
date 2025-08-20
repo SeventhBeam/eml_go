@@ -123,7 +123,7 @@ func Test_emlStore_RenewalFlow(t *testing.T) {
 		assert.Equal(t, "192.168.1.1", initiateReq.IPAddress, "expected ip_address = 192.168.1.1, got %s", initiateReq.IPAddress)
 		assert.Equal(t, "token123", initiateReq.TokenID, "expected token_id = token123, got %s", initiateReq.TokenID)
 		assert.Equal(t, CommunicateMethodSMS, initiateReq.CommunicateMethod, "expected communicate_method = sms, got %s", initiateReq.CommunicateMethod)
-		assert.Equal(t, "renewal", initiateReq.OperationType, "expected operation_type = renewal, got %s", initiateReq.OperationType)
+		assert.Equal(t, OperationTypeOneTimePassCode, initiateReq.OperationType, "expected operation_type = renewal, got %s", initiateReq.OperationType)
 
 		return httpmock.NewJsonResponse(200, initiateResponse)
 	})
@@ -162,7 +162,7 @@ func Test_emlStore_RenewalFlow(t *testing.T) {
 		IPAddress:         "192.168.1.1",
 		TokenID:           authResp.TokenID,
 		CommunicateMethod: CommunicateMethodSMS,
-		OperationType:     "renewal",
+		OperationType:     OperationTypeOneTimePassCode,
 	}
 	initiateResp, err := store.Initiate(ctx, "eaid123", initiateReq)
 	assert.NoError(t, err, "error initiating %v", err)
