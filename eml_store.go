@@ -2,12 +2,13 @@ package eml
 
 import (
 	"context"
-	"github.com/go-resty/resty/v2"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 )
 
 type Store interface {
@@ -365,7 +366,7 @@ func (e *emlStore) Authenticate(ctx context.Context, eaid string, req Authentica
 }
 
 func (e *emlStore) Initiate(ctx context.Context, eaid string, req InitiateRequest) (*InitiateResponse, error) {
-	log.Printf("Initiating %s operation for account %s via %s", req.OperationType, eaid, req.CommunicateMethod)
+	log.Printf("Initiating %s operation for account %s via %s", req.OperationType, eaid, req.CommunicationMethod)
 	resp, err := e.request(ctx).
 		SetPathParams(map[string]string{"id": eaid}).
 		SetBody(req).
