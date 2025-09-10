@@ -131,11 +131,11 @@ const (
 	StateReversed   TxnState = "reversed"
 )
 
-type CommunicateMethod string
+type CommunicationMethod string
 
 const (
-	CommunicateMethodSMS   CommunicateMethod = "sms"
-	CommunicateMethodEmail CommunicateMethod = "email"
+	CommunicationMethodSMS   CommunicationMethod = "sms"
+	CommunicationMethodEmail CommunicationMethod = "email"
 )
 
 type OperationType string

@@ -3,11 +3,12 @@ package eml
 import (
 	"context"
 	"encoding/json"
-	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -122,8 +123,8 @@ func Test_emlStore_RenewalFlow(t *testing.T) {
 		assert.NoError(t, err, "failed to unmarshal initiate request")
 		assert.Equal(t, "192.168.1.1", initiateReq.IPAddress, "expected ip_address = 192.168.1.1, got %s", initiateReq.IPAddress)
 		assert.Equal(t, "token123", initiateReq.TokenID, "expected token_id = token123, got %s", initiateReq.TokenID)
-		assert.Equal(t, CommunicateMethodSMS, initiateReq.CommunicateMethod, "expected communicate_method = sms, got %s", initiateReq.CommunicateMethod)
-		assert.Equal(t, OperationTypeOneTimePassCode, initiateReq.OperationType, "expected operation_type = renewal, got %s", initiateReq.OperationType)
+		assert.Equal(t, CommunicationMethodSMS, initiateReq.CommunicationMethod, "expected communicate_method = %s, got %s", CommunicationMethodSMS, initiateReq.CommunicationMethod)
+		assert.Equal(t, OperationTypeOneTimePassCode, initiateReq.OperationType, "expected operation_type = %s, got %s", OperationTypeOneTimePassCode, initiateReq.OperationType)
 
 		return httpmock.NewJsonResponse(200, initiateResponse)
 	})
@@ -159,10 +160,10 @@ func Test_emlStore_RenewalFlow(t *testing.T) {
 	assert.Equal(t, "test@example.com", authResp.EmailAddress, "expected email = test@example.com, got %s", authResp.EmailAddress)
 
 	initiateReq := InitiateRequest{
-		IPAddress:         "192.168.1.1",
-		TokenID:           authResp.TokenID,
-		CommunicateMethod: CommunicateMethodSMS,
-		OperationType:     OperationTypeOneTimePassCode,
+		IPAddress:           "192.168.1.1",
+		TokenID:             authResp.TokenID,
+		CommunicationMethod: CommunicationMethodSMS,
+		OperationType:       OperationTypeOneTimePassCode,
 	}
 	initiateResp, err := store.Initiate(ctx, "eaid123", initiateReq)
 	assert.NoError(t, err, "error initiating %v", err)
@@ -202,16 +203,16 @@ func Test_emlStore_InitiateWithEmail(t *testing.T) {
 		var initiateReq InitiateRequest
 		err := json.Unmarshal(bodyBytes, &initiateReq)
 		assert.NoError(t, err, "failed to unmarshal initiate request")
-		assert.Equal(t, CommunicateMethodEmail, initiateReq.CommunicateMethod, "expected communicate_method = email, got %s", initiateReq.CommunicateMethod)
+		assert.Equal(t, CommunicationMethodEmail, initiateReq.CommunicationMethod, "expected communicate_method = email, got %s", initiateReq.CommunicationMethod)
 
 		return httpmock.NewJsonResponse(200, initiateResponse)
 	})
 
 	initiateReq := InitiateRequest{
-		IPAddress:         "10.0.0.1",
-		TokenID:           "token456",
-		CommunicateMethod: CommunicateMethodEmail,
-		OperationType:     "renewal",
+		IPAddress:           "10.0.0.1",
+		TokenID:             "token456",
+		CommunicationMethod: CommunicationMethodEmail,
+		OperationType:       OperationTypeOneTimePassCode,
 	}
 	resp, err := store.Initiate(ctx, "eaid123", initiateReq)
 	assert.NoError(t, err, "error initiating with email %v", err)
